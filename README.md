@@ -1,2 +1,2 @@
 # f-manager
-core for factorio mod manager
+core repo for factorio mod manager
