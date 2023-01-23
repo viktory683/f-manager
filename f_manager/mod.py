@@ -147,6 +147,8 @@ class Mod:
             # TODO
             pass
         else:
+            mod_file = None
+            
             for filename in config.mods_file.parent.rglob("*.zip"):
                 name = filename.stem.rsplit("_", 1)
                 if name == self.name:
@@ -180,6 +182,8 @@ class Mod:
             # TODO
             pass
         else:
+            mod_file = None
+
             for filename in config.mods_file.parent.rglob("*.zip"):
                 name = filename.stem.rsplit("_", 1)
                 if name == self.name:
