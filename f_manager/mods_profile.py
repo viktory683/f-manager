@@ -266,7 +266,7 @@ New name will be changed on save")
             None
         """
         if profiles is None:
-            profiles = cls.list_profiles()
+            profiles = cls.list_profiles
 
         for profile in profiles:
             if state:
@@ -287,7 +287,7 @@ New name will be changed on save")
             None
         """
         if profiles is None:
-            profiles = cls.list_profiles()
+            profiles = cls.list_profiles
 
         for profile in profiles:
             profile.add(mod)
@@ -305,19 +305,16 @@ New name will be changed on save")
             None
         """
         if profiles is None:
-            profiles = cls.list_profiles()
+            profiles = cls.list_profiles
 
         for profile in profiles:
             profile.remove(mod)
             profile.save()
 
     @classmethod
+    @property
     def list_profiles(cls):
-        """Returns a list of profiles in save_dir
-
-        Returns:
-            Generator[Profile]
-        """
+        """Generator[Profile]: a list of profiles in save_dir"""
         if not config.profiles_dir.is_dir():
             logger.warning("Profiles directory is not found")
             return
