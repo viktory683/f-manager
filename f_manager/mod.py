@@ -67,7 +67,12 @@ class Mod:
         enabled (bool): special info for the profile
     """
 
+    # TODO optimize zip load to read all needed info on first zip read
+
+    # TODO check for using config values and add foolproof
+
     # TODO refactor and reformat
+
     # TODO add if mod is not dependents of 'base' but dependents on factorio version
     def __init__(self, name, enabled: bool = True):
         """Creates Mod object
@@ -80,6 +85,8 @@ class Mod:
         self.enabled = enabled
         self._downloaded = None
         self._version = None
+        self._description = None
+        self._name_extended = None
         self._has_new_version = None
         self._dependencies = {
             "require": [],
@@ -126,6 +133,72 @@ class Mod:
                     break
 
         return self._version
+
+    @property
+    def description(self):
+        """str: description of the mod"""
+        if not self.downloaded:
+            return None
+
+        if self._description:
+            return self._description
+
+        if self.name == "base":
+            # TODO
+            pass
+        else:
+            for filename in config.mods_file.parent.rglob("*.zip"):
+                name = filename.stem.rsplit("_", 1)
+                if name == self.name:
+                    mod_file = filename
+                    break
+
+            with zipfile.ZipFile(mod_file) as archive:
+                info_json_path = list(
+                    filter(
+                        lambda zipinfo: "info.json" in zipinfo.filename,
+                        archive.filelist
+                    )
+                )[0].filename
+
+            self._description = json.loads(
+                archive.read(info_json_path).decode("utf-8")
+            ).get("description")
+
+        return self._description
+
+    @property
+    def name_extended(self):
+        """str: extended name of the mod"""
+        if not self.downloaded:
+            return None
+
+        if self._name_extended:
+            return self._name_extended
+
+        if self.name == "base":
+            # TODO
+            pass
+        else:
+            for filename in config.mods_file.parent.rglob("*.zip"):
+                name = filename.stem.rsplit("_", 1)
+                if name == self.name:
+                    mod_file = filename
+                    break
+
+            with zipfile.ZipFile(mod_file) as archive:
+                info_json_path = list(
+                    filter(
+                        lambda zipinfo: "info.json" in zipinfo.filename,
+                        archive.filelist
+                    )
+                )[0].filename
+
+            self._name_extended = json.loads(
+                archive.read(info_json_path).decode("utf-8")
+            ).get("title")
+
+        return self._name_extended
 
     @property
     def dependencies(self):
