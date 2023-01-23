@@ -48,5 +48,3 @@ from .mods_profile import Profile, TempProfile
 #     V download
 #     V upgrade
 #         V upgrade only mods from profile
-# TODO rewrite docs to google style (https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html)
-# TODO complete docscting with comments for properties

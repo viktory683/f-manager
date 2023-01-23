@@ -1,5 +1,4 @@
 import json
-from typing import Generator
 import urllib.parse as urlparse
 import zipfile
 from functools import reduce
@@ -11,56 +10,71 @@ from . import config, exceptions
 from .logger import logger
 
 
-class Mod:
+def _parse_dependency(
+        dependency_raw,
+        categories: dict[str, list[str] | None]
+) -> tuple[str, str]:
+    """Parses raw dependency string
+
+    Note:
+        categories format: {"category": ["pref1", "pref2", ...], ..., "default_category": None}
+
+    Args:
+        dependency_raw (str): raw dependency string
+        categories (dict[str, list[str | None]]): categories to parse
+
+    Returns:
+        tuple[str, str]: (category, dependency)
     """
-    A class to represent a mod.
 
-    ...
+    if any(
+            map(
+                lambda prefix: dependency_raw.startswith(prefix),
+                reduce(
+                    lambda a, b: a + b,
+                    filter(lambda v: v, categories.values())
+                )
+            )
+    ):
+        for category, prefixes in categories.items():
+            if any(
+                    map(
+                        lambda prefix: dependency_raw.startswith(prefix),
+                        prefixes
+                    )
+            ):
+                dependency = dependency_raw
+                for prefix in prefixes:
+                    dependency = dependency.strip(prefix)
+                dependency = dependency.strip()
+                dependency = dependency.split()[0]
+                return category, dependency
+    else:
+        dependency = dependency_raw
+        dependency = dependency.strip()
+        dependency = dependency.split()[0]
 
-    Attributes
-    ----------
-    name : str
-        name of the mod
-    enabled : bool
-        special info for the profile
-    downloaded : bool
-        is mod exists in the mods folder
-    version : str
-        version of the mod
-    dependencies : dict[str, list[Mod]]
-        mod dependencies
-        dict format is
-        {
-            "require": [],
-            "optional": [],
-            'conflict': [],
-            "parent": []
-        }
-    downloaded_mods : Generator[Mod]
-        Check for list of downloaded mods
+        for category, prefixes in categories.items():
+            if prefixes is None:
+                return category, dependency
 
-    Methods
-    -------
-    update():
-        Check for the new version of the mod.
-    upgrade():
-        Updates the version of the mod and downloads it
-    remove():
-        Removes the mod with his dependencies
+
+class Mod:
+    """A class to represent a mod.
+
+    Attributes:
+        name (str): name of the mod
+        enabled (bool): special info for the profile
     """
 
     # TODO refactor and reformat
     # TODO add if mod is not dependents of 'base' but dependents on factorio version
-    def __init__(self, name, enabled=True):
-        """
-        Constructs all the necessary attributes for the mod object.
+    def __init__(self, name, enabled: bool = True):
+        """Creates Mod object
 
-        Parameters
-        ----------
-            name : str
-                name of the mod
-            enabled : bool, optional
-                special info for the profile
+        Args:
+            name (str): name of the mod
+            enabled (bool, optional): special info for the profile
         """
         self.name = name
         self.enabled = enabled
@@ -76,6 +90,7 @@ class Mod:
 
     @property
     def downloaded(self):
+        """bool: True if mod exists in mods directory, False otherwise"""
         if self._downloaded:
             return self._downloaded
 
@@ -88,6 +103,7 @@ class Mod:
 
     @property
     def version(self):
+        """str: version of the mod"""
         if not self.downloaded:
             return None
 
@@ -96,10 +112,10 @@ class Mod:
 
         if self.name == "base":
             with (
-                config.game_folder.
-                joinpath("data").
-                joinpath("base").
-                joinpath("info.json")
+                    config.game_folder.
+                    joinpath("data").
+                    joinpath("base").
+                    joinpath("info.json")
             ).open() as f:
                 self._version = json.load(f)["version"]
         else:
@@ -111,50 +127,15 @@ class Mod:
 
         return self._version
 
-    def _parse_dependency(
-        self,
-        dependency_raw,
-        categories: dict[str, list[str] | None]
-    ):
-        # categories format
-        # {
-        #     "category": ["pref1", "pref2", ...],
-        #     ...,
-        #     "default_category": None  # for "require" or what
-        # }
-        if any(
-            map(
-                lambda prefix: dependency_raw.startswith(prefix),
-                reduce(
-                    lambda a, b: a + b,
-                    filter(lambda v: v, categories.values())
-                )
-            )
-        ):
-            for category, prefixes in categories.items():
-                if any(
-                    map(
-                        lambda prefix: dependency_raw.startswith(prefix),
-                        prefixes
-                    )
-                ):
-                    dependency = dependency_raw
-                    for prefix in prefixes:
-                        dependency = dependency.strip(prefix)
-                    dependency = dependency.strip()
-                    dependency = dependency.split()[0]
-                    return category, dependency
-        else:
-            dependency = dependency_raw
-            dependency = dependency.strip()
-            dependency = dependency.split()[0]
-
-            for category, prefixes in categories.items():
-                if prefixes is None:
-                    return category, dependency
-
     @property
     def dependencies(self):
+        """
+        Note:
+            default dependencies categories: ["optional", "conflict", "parent", "require"]
+
+        Returns:
+            dict[str, list[Mod | None]]: dependencies dictionary
+        """
         # TODO add base library if it's not set
         # TODO (based on required factorio version)
 
@@ -190,7 +171,7 @@ class Mod:
         parent_prefixes = ["~", "(~)"]
 
         for dependency_raw in dependencies_list:
-            category, dependency = self._parse_dependency(
+            category, dependency = _parse_dependency(
                 dependency_raw,
                 {
                     "optional": optional_prefixes,
@@ -206,6 +187,11 @@ class Mod:
         return self._dependencies
 
     def _api_mod_full_info(self):
+        """Call to mods.factorio.com for full mod info
+
+        Returns:
+            Response: JSON information
+        """
         mods_url = "https://mods.factorio.com/api/mods"
         mod_url = f"{mods_url}/{self.name}"
         mod_full_url = f"{mod_url}/full"
@@ -213,6 +199,15 @@ class Mod:
         return requests.get(mod_full_url)
 
     def download(self, version: str = None, release_json=None):
+        """Download mod from mod portal
+
+        Args:
+            version (str, optional): version of the mod
+            release_json (dict, optional): release from mods.factorio.com/api/mods/MOD_NAME
+
+        Returns:
+            None
+        """
         if self.downloaded:
             raise exceptions.ModAlreadyExistsError(self.name)
 
@@ -265,16 +260,11 @@ Status code: {response.status_code}""")
             if not mod.downloaded:
                 mod.download()
 
-    def update(self) -> None | dict:
-        """
-        Check for the new version of the mod
+    def update(self) -> dict | None:
+        """Check for the new version of the mod
 
-        Parameters
-        ----------
-
-        Returns
-        -------
-        None | dict
+        Returns:
+            dict | None: decoded JSON release
         """
         if not self.downloaded:
             raise exceptions.ModNotFoundError(self.name)
@@ -298,15 +288,10 @@ Status code: {response.status_code}""")
         return self._has_new_version
 
     def upgrade(self):
-        """
-        Updates the version of the mod and downloads it
+        """Updates the version of the mod and downloads it
 
-        Parameters
-        ----------
-
-        Returns
-        -------
-        None
+        Returns:
+            None
         """
         if not (new_release := self.update()):
             logger.warning(
@@ -322,15 +307,10 @@ Status code: {response.status_code}""")
         )
 
     def remove(self):
-        """
-        Removes the mod with his dependencies
+        """Removes the mod with his dependencies
 
-        Parameters
-        ----------
-
-        Returns
-        -------
-        None
+        Returns:
+            None
         """
         if self.name == "base":
             raise exceptions.BaseModRemoveError()
@@ -347,7 +327,7 @@ Status code: {response.status_code}""")
 
         self._downloaded = False
 
-        for mod in Mod.downloaded_mods():
+        for mod in Mod.downloaded_mods:
             # delete all mods that required self.name
             # or those that self.name hard required
 
@@ -366,13 +346,13 @@ Status code: {response.status_code}""")
 
         # clear all orphaned
         for dependency in self.dependencies["require"]:
-            for downloaded_mod in Mod.downloaded_mods():
+            for downloaded_mod in Mod.downloaded_mods:
                 if dependency.name in map(
-                    lambda m: m.name,
-                    (
-                        downloaded_mod.dependencies["require"]
-                        + downloaded_mod.dependencies["optional"]
-                    )
+                        lambda m: m.name,
+                        (
+                            downloaded_mod.dependencies["require"]
+                            + downloaded_mod.dependencies["optional"]
+                        )
                 ):
                     break
             else:
@@ -383,25 +363,21 @@ Status code: {response.status_code}""")
     def search_mods(
             cls,
             query,
-            version="any",
-            search_order="downloaded"
-    ) -> Generator | None:
-        """
-        Search mod portal (mods.factorio.com) for the mod
+            version: str = "any",
+            search_order: str = "downloaded"
+    ):
+        """Search mod portal (mods.factorio.com) for the mod
 
-        Parameters
-        ----------
-            query : str
-                name of the mod to search
-            version : str, optional
-                version of the mod to search
-            search_order : str, optional
-                result sorting
-                known variants: [downloaded, updated]
+        Note:
+            search_order known variants: ["downloaded", "updated"]
 
-        Returns
-        -------
-        Generator[dict] | None
+        Args:
+            query (str): name of the mod to search
+            version (str, optional): version of the mod to search
+            search_order (str, optional): result sorting
+
+        Returns:
+            Generator[dict] | None: Dictionary of {"name", "description", "name_extended"}
 
         """
 
@@ -435,7 +411,7 @@ Status code: {response.status_code}""")
 
         last_index = int(last_page_index) if last_page_index != "" else 1
 
-        for page_index in range(start_index, last_index+1):
+        for page_index in range(start_index, last_index + 1):
             for block in mod_list.findChildren("div", recursive=False):
                 link = block.find_all("a")[1]
                 name = "/".join(link["href"].split("/")[2:])
@@ -446,7 +422,7 @@ Status code: {response.status_code}""")
                     "description": description,
                     "name_extended": name_extended
                 }
-            url = f"https://mods.factorio.com/{page_index+1}?"
+            url = f"https://mods.factorio.com/{page_index + 1}?"
             search_query = url + urlparse.urlencode(params)
             response = requests.get(search_query)
             soup = BeautifulSoup(response.text, "lxml")
@@ -454,16 +430,11 @@ Status code: {response.status_code}""")
 
     @classmethod
     @property
-    def downloaded_mods(cls) -> Generator:
-        """
-        Check for list of downloaded mods
+    def downloaded_mods(cls):
+        """Check for list of downloaded mods
 
-        Parameters
-        ----------
-
-        Returns
-        -------
-        Generator[Mod]
+        Returns:
+            Generator[Mod]: Iterable through mods
         """
         yield Mod("base")
         for filename in config.mods_file.parent.rglob("*.zip"):

@@ -14,44 +14,25 @@ class Save:
 
 
 class Launcher:
-    """
-    A class to represent a game launcher
-
-    ...
-
-    Attributes
-    ----------
-
-    Methods
-    -------
-    run(save: Save = None):
-        Runs the game with given save
-    """
+    """A class to represent a game launcher"""
 
     def __init__(self, profile: Profile = None):
-        """
-        Initialize the launcher with the given profile
+        """Initialize the launcher with the given profile
 
-        Parameters
-        ----------
-            profile : Profile, optional
-                profile you want to load
+        Args:
+            profile (Profile, optional): profile you want to load
         """
         self._temp_profile = TempProfile(profile)
         self.run()
 
     def run(self, save: Save = None):
-        """
-        Runs the game with given save
+        """Runs the game with given save
 
-        Parameters
-        ----------
-            save : Save, optional
-                game save of <class 'Save'>
+        Args:
+            save (Save, optional): game save to load
 
-        Returns
-        -------
-        None
+        Returns:
+            None
         """
         # TODO load save
 

@@ -1,7 +1,6 @@
 import json
 import pathlib
 import shutil
-from typing import Generator
 
 from . import config, exceptions
 from .logger import logger
@@ -9,70 +8,30 @@ from .mod import Mod
 
 
 class Profile:
-    """
-    A class to represent a profile.
+    """A class to represent a profile.
 
-    ...
-
-
-    Attributes
-    ----------
-    name : str
-        name of the profile
-    mods : list[Mod]
-        a list of the profile mods
-
-    Methods
-    -------
-    save():
-        Saves the profile after some changes
-    set_mods(mods: list[Mod]):
-        Update the list of mods in profile from other profile
-    rename(new_name: str):
-        Rename current profile
-    exists():
-        Check if profile exists in save_dir
-    delete():
-        Delete profile from the save_dir
-    enable(mod: Mod):
-        Enable the mod for the profile
-    disable(mod: Mod):
-        Disable the mod for the profile
-    add(mod: Mod):
-        Add the mod to the profile
-    remove(mod: Mod):
-        Remove the mod from the profile
-    enable_for_all(mod: Mod, profiles: list[Profile] = None):
-        Enable the mod for all profiles
-    disable_for_all(mod: Mod, profiles: list[Profile] = None):
-        Disable the mod for all profiles
-    add_for_all(mod: Mod, profiles: list[Profile] = None):
-        Add the mod to all profiles
-    remove_for_all(cls, mod: Mod, list[Profile] = None):
-        Remove the mod from all profiles
-    list_profiles():
-        Returns a list of profiles in save_dir
+    Attributes:
+        name (str): name of the profile
     """
 
-    def __init__(self, name="default", save_dir: pathlib.Path = None):
-        """
-        Constructs all the necessary attributes for the Profile object.
+    def __init__(self, name: str = "default", save_dir: pathlib.Path = None):
+        """Creates Profile object
 
-        Parameters
-        ----------
-            name : str, optional
-                name of the profile
-            save_dir : pathlib.Path, optional
-                dir where to save the profile
+        Args:
+            name (str, optional): name of the profile
+            save_dir (pathlib.Path, optional): dir where to save the profile
         """
         self.name = name
         self._new_name = None
-        self._mods: list[Mod] = None
+        self._mods: list[Mod] = []
 
         self.save_dir = save_dir or config.profiles_dir
+        if isinstance(self.save_dir, str):
+            self.save_dir = pathlib.Path(self.save_dir)
 
     @property
-    def mods(self) -> list[Mod]:
+    def mods(self):
+        """list[Mod]: list of profile mods"""
         if self._mods:
             return self._mods
 
@@ -101,15 +60,10 @@ class Profile:
         return self._mods
 
     def save(self):
-        """
-        Saves the profile after some changes
+        """Saves the profile after some changes
 
-        Parameters
-        ----------
-
-        Returns
-        -------
-        None
+        Returns:
+            None
         """
         mod_list = {"mods": []}
         for mod in self.mods:
@@ -130,38 +84,31 @@ class Profile:
         logger.info(f"[{self.name}] saved to \
 {self.save_dir.joinpath(f'{self.name}.json')}")
 
-    def set_mods(self, mods: list[Mod]):
-        """
-        Update the list of mods in profile from other profile
+    def set_mods(self, mods):
+        """Update the list of mods in profile from other profile
 
-        Parameters
-        ----------
-            mods : list[Mod]
-                list of mods
+        Args:
+            mods (list[Mod]): list of mods
 
-        Returns
-        -------
-        None
+        Returns:
+            None
         """
         self._mods = mods
 
         logger.info(f"[{self.name}] updated with mods: \
 [{' '.join(map(lambda mod: mod.name, mods))}]")
 
-    def rename(self, new_name: str):
-        """
-        Rename current profile
+    def rename(self, new_name):
+        """Rename current profile
 
-        ! New name will be applied after save()
+        Note:
+            New name will be applied after save()
 
-        Parameters
-        ----------
-            new_name : str
-                new name of the profile
+        Args:
+            new_name (str): new name of the profile
 
-        Returns
-        -------
-        None
+        Returns:
+            None
         """
         self._new_name = new_name
 
@@ -169,27 +116,18 @@ class Profile:
 New name will be changed on save")
 
     def exists(self):
-        """
-        Check if profile exists in save_dir
+        """Check if profile exists in save_dir
 
-        Parameters
-        ----------
-
-        Returns
-        bool
+        Returns:
+            True if exists, False otherwise
         """
         return self.save_dir.joinpath(f"{self.name}.json").is_file()
 
     def delete(self):
-        """
-        Delete profile from the save_dir
+        """Delete profile from the save_dir
 
-        Parameters
-        ----------
-
-        Returns
-        -------
-        None
+        Returns:
+            None
         """
         if not self.exists():
             logger.warning(f"[{self.name}] does not exist. Skipping delete")
@@ -202,18 +140,14 @@ New name will be changed on save")
 
         logger.info(f"[{self.name}] deleted.")
 
-    def enable(self, mod: Mod):
-        """
-        Enable the mod for the profile
+    def enable(self, mod):
+        """Enable the mod for the profile
 
-        Parameters
-        ----------
-            mod: Mod
-                the mod to enable
+        Args:
+            mod (Mod): the mod to enable
 
-        Returns
-        -------
-        None
+        Returns:
+            None
         """
         for i, profile_mod in enumerate(self.mods):
             if profile_mod.name == mod.name:
@@ -227,18 +161,14 @@ New name will be changed on save")
 
         logger.warning(f"[{self.name}] does not have added '{mod.name}'")
 
-    def disable(self, mod: Mod):
-        """
-        Disable the mod for the profile
+    def disable(self, mod):
+        """Disable the mod for the profile
 
-        Parameters
-        ----------
-            mod: Mod
-                the mod to disable
+        Args:
+            mod (Mod): the mod to disable
 
-        Returns
-        -------
-        None
+        Returns:
+            None
         """
         for i, profile_mod in enumerate(self.mods):
             if profile_mod.name == mod.name:
@@ -252,24 +182,20 @@ New name will be changed on save")
 
         logger.warning(f"[{self.name}] does not have added '{mod.name}'")
 
-    def _toggle_mod_by_id(self, id, state):
-        self._mods[id].enabled = state
+    def _toggle_mod_by_id(self, mod_id, state):
+        self._mods[mod_id].enabled = state
 
         logger.info(f"[{self.name}] {'enabled' if state else 'disabled'} \
-'{self._mods[id].name}' mod")
+'{self._mods[mod_id].name}' mod")
 
-    def add(self, mod: Mod):
-        """
-        Add the mod to the profile
+    def add(self, mod):
+        """Add the mod to the profile
 
-        Parameters
-        ----------
-            mod: Mod
-                the mod to add
+        Args:
+            mod (Mod): the mod to add
 
-        Returns
-        -------
-        None
+        Returns:
+            None
         """
         for profile_mod in self.mods:
             if profile_mod.name == mod.name:
@@ -282,18 +208,14 @@ New name will be changed on save")
         logger.info(f"[{self.name}] updated with '{mod.name}' mod \
 (enabled by default)")
 
-    def remove(self, mod: Mod):
-        """
-        Remove the mod from the profile
+    def remove(self, mod):
+        """Remove the mod from the profile
 
-        Parameters
-        ----------
-            mod: Mod
-                the mod to remove
+        Args:
+            mod (Mod): the mod to remove
 
-        Returns
-        -------
-        None
+        Returns:
+            None
         """
         for i, profile_mod in enumerate(self.mods):
             if profile_mod.name == mod.name:
@@ -306,44 +228,43 @@ New name will be changed on save")
         logger.warning(f"[{self.name}] does't have '{mod.name}' mod in list]")
 
     @classmethod
-    def enable_for_all(cls, mod: Mod, profiles=None):
-        """
-        Enable the mod for all profiles
+    def enable_for_all(cls, mod, profiles=None):
+        """Enable the mod for all profiles
 
-        Parameters
-        ----------
-            mod : Mod
-                the mod to enable
-            profiles : list[Profile], optional
-                the list of profiles
+        Args:
+            mod (Mod): the mod to enable
+            profiles (list[Profile], optional): the list of profiles
 
-        Returns
-        -------
-        None
+        Returns:
+            None
         """
         cls._toggle_for_all(mod, True, profiles)
 
     @classmethod
     def disable_for_all(cls, mod: Mod, profiles=None):
-        """
-        Disable the mod for all profiles
+        """Disable the mod for all profiles
 
-        Parameters
-        ----------
-            mod : Mod
-                the mod to disable
-            profiles : list[Profile], optional
-                the list of profiles
+        Args:
+            mod (Mod): the mod to disable
+            profiles (list[Profile], optional): the list of profiles
 
-        Returns
-        -------
-        None
+        Returns:
+            None
         """
         cls._toggle_for_all(mod, False, profiles)
 
     @classmethod
     def _toggle_for_all(cls, mod: Mod, state, profiles=None):
-        # profiles: list[NewProfile]
+        """
+
+        Args:
+            mod (Mod): mod object
+            state (bool): True to enable, False to disable
+            profiles (list[Profile], optional): the list of profiles
+
+        Returns:
+            None
+        """
         if profiles is None:
             profiles = cls.list_profiles()
 
@@ -356,19 +277,14 @@ New name will be changed on save")
 
     @classmethod
     def add_for_all(cls, mod: Mod, profiles=None):
-        """
-        Add the mod to all profiles
+        """Add the mod to all profiles
 
-        Parameters
-        ----------
-            mod : Mod
-                the mod to add
-            profiles : list[Profile], optional
-                the list of profiles
+        Args:
+            mod (Mod): the mod to add
+            profiles (list[Profile], optional): the list of profiles
 
-        Returns
-        -------
-        None
+        Returns:
+            None
         """
         if profiles is None:
             profiles = cls.list_profiles()
@@ -379,19 +295,14 @@ New name will be changed on save")
 
     @classmethod
     def remove_for_all(cls, mod: Mod, profiles=None):
-        """
-        Remove the mod from all profiles
+        """Remove the mod from all profiles
 
-        Parameters
-        ----------
-            mod : Mod
-                the mod to remove
-            profiles : list[Profile], optional
-                the list of profiles
+        Args:
+            mod (Mod): the mod to remove
+            profiles (list[Profile], optional): the list of profiles
 
-        Returns
-        -------
-        None
+        Returns:
+            None
         """
         if profiles is None:
             profiles = cls.list_profiles()
@@ -401,16 +312,11 @@ New name will be changed on save")
             profile.save()
 
     @classmethod
-    def list_profiles(cls) -> Generator:
-        """
-        Returns a list of profiles in save_dir
+    def list_profiles(cls):
+        """Returns a list of profiles in save_dir
 
-        Parameters
-        ----------
-
-        Returns
-        -------
-        Generator[Profile]
+        Returns:
+            Generator[Profile]
         """
         if not config.profiles_dir.is_dir():
             logger.warning("Profiles directory is not found")
@@ -421,46 +327,27 @@ New name will be changed on save")
 
 
 class TempProfile(Profile):
-    """
-    A class to represent a temporary profile
+    """A class to represent a temporary profile"""
 
-    ...
-
-    Attributes
-    ----------
-
-    Methods
-    -------
-    activate():
-        Activates the profile
-    deactivate():
-        Deactivates the profile
-    """
     def __init__(self, profile: Profile = None):
-        """
-        Constructs all the necessary attributes for the TempProfile object.
+        """Creates TempProfile object
 
-        Parameters
-        ----------
-        profile: Profile, optional
-            base profile
+        Args:
+            profile (Profile, optional): base profile
         """
         super().__init__("default" if profile is None else profile.name)
 
     def activate(self):
-        """
-        Copy current factorio mod-list.json to mod-list.json.bak,
-        replaces it with current profile,
-        extends profile mod_list add all downloaded mods
-        and removing all disabled not downloaded mods
+        """Activates chosen profile
 
-        Parameters
-        ----------
+        Note:
+            Copy current factorio mod-list.json to mod-list.json.bak,
+            replaces it with current profile,
+            extends profile mod_list add all downloaded mods
+            and removing all disabled not downloaded mods
 
-        Returns
-        -------
-        None
-
+        Returns:
+            None
         """
         if not self.exists():
             self.save()
@@ -501,25 +388,23 @@ class TempProfile(Profile):
         with config.mods_file.open("w") as f:
             json.dump({"mods": mod_list}, f, indent=4, ensure_ascii=False)
 
-        logger.info(f"[{self.name}] extended and filtered was saved to \
-{config.mods_file}.\nOld mod-list.json was saved to \
-{config.mods_file.parent.joinpath('mod-list.json.bak')}")
         # shutil.copy(
         #     self.save_dir.joinpath(f"{self.name}.json"),
         #     config.mods_file
         # )
 
+        logger.info(f"[{self.name}] extended and filtered was saved to \
+{config.mods_file}.\nOld mod-list.json was saved to \
+{config.mods_file.parent.joinpath('mod-list.json.bak')}")
+
     def deactivate(self):
-        """
-        Move back mod-list.json
+        """Deactivates chosen profile
 
-        Parameters
-        ----------
+        Note:
+            restoring original mod-list.json from mod-list.json.bak
 
-        Returns
-        -------
-        None
-
+        Returns:
+            None
         """
         if not config.mods_file.parent.joinpath("mod-list.json.bak").is_file():
             raise exceptions.FileNotFoundException(
