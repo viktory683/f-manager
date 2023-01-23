@@ -148,7 +148,7 @@ class Mod:
             pass
         else:
             mod_file = None
-            
+
             for filename in config.mods_file.parent.rglob("*.zip"):
                 name = filename.stem.rsplit("_", 1)
                 if name == self.name:
@@ -163,9 +163,9 @@ class Mod:
                     )
                 )[0].filename
 
-            self._description = json.loads(
-                archive.read(info_json_path).decode("utf-8")
-            ).get("description")
+                self._description = json.loads(
+                    archive.read(info_json_path).decode("utf-8")
+                ).get("description")
 
         return self._description
 
@@ -198,9 +198,9 @@ class Mod:
                     )
                 )[0].filename
 
-            self._name_extended = json.loads(
-                archive.read(info_json_path).decode("utf-8")
-            ).get("title")
+                self._name_extended = json.loads(
+                    archive.read(info_json_path).decode("utf-8")
+                ).get("title")
 
         return self._name_extended
 
