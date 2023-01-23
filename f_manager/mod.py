@@ -150,7 +150,7 @@ class Mod:
             mod_file = None
 
             for filename in config.mods_file.parent.rglob("*.zip"):
-                name = filename.stem.rsplit("_", 1)
+                name = filename.stem.rsplit("_", 1)[0]
                 if name == self.name:
                     mod_file = filename
                     break
@@ -185,7 +185,7 @@ class Mod:
             mod_file = None
 
             for filename in config.mods_file.parent.rglob("*.zip"):
-                name = filename.stem.rsplit("_", 1)
+                name = filename.stem.rsplit("_", 1)[0]
                 if name == self.name:
                     mod_file = filename
                     break
