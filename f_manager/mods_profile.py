@@ -1,10 +1,9 @@
 import json
 import shutil
 
-import config
-import exceptions
-from logger import logger
-from mod import Mod
+from . import config, exceptions
+from .logger import logger
+from .mod import Mod
 
 
 class Profile:
@@ -57,7 +56,7 @@ class Profile:
             self.name = self.new_name
 
         if not self.save_dir.is_dir():
-            logger.warn("Profiles directory not found. Creating new")
+            logger.warning("Profiles directory not found. Creating new")
         self.save_dir.mkdir(parents=True, exist_ok=True)
 
         with self.save_dir.joinpath(f"{self.name}.json").open("w") as f:
@@ -83,7 +82,7 @@ New name will be changed on save")
 
     def delete(self):
         if not self.exists():
-            logger.warn(f"[{self.name}] does not exist. Skipping delete")
+            logger.warning(f"[{self.name}] does not exist. Skipping delete")
             return
 
         if self.name == "default":
@@ -97,27 +96,27 @@ New name will be changed on save")
         for i, profile_mod in enumerate(self.mods):
             if profile_mod.name == mod.name:
                 if self._mods[i].enabled:
-                    logger.warn(f"[{self.name}] already have enabled \
+                    logger.warning(f"[{self.name}] already have enabled \
 '{mod.name}' mod. Skipping")
                     return
 
                 self._toggle_mod_by_id(i, True)
                 return
 
-        logger.warn(f"[{self.name}] does not have added '{mod.name}'")
+        logger.warning(f"[{self.name}] does not have added '{mod.name}'")
 
     def disable(self, mod: Mod):
         for i, profile_mod in enumerate(self.mods):
             if profile_mod.name == mod.name:
                 if not self._mods[i].enabled:
-                    logger.warn(f"[{self.name}] already have disabled \
+                    logger.warning(f"[{self.name}] already have disabled \
 '{mod.name}' mod. Skipping")
                     return
 
                 self._toggle_mod_by_id(i, False)
                 return
 
-        logger.warn(f"[{self.name}] does not have added '{mod.name}'")
+        logger.warning(f"[{self.name}] does not have added '{mod.name}'")
 
     def _toggle_mod_by_id(self, id, state):
         self._mods[id].enabled = state
@@ -128,7 +127,7 @@ New name will be changed on save")
     def add(self, mod: Mod):
         for profile_mod in self.mods:
             if profile_mod.name == mod.name:
-                logger.warn(f"[{self.name}] already added '{mod.name}' mod")
+                logger.warning(f"[{self.name}] already added '{mod.name}' mod")
 
                 return
 
@@ -146,7 +145,7 @@ New name will be changed on save")
 
                 return
 
-        logger.warn(f"[{self.name}] does't have '{mod.name}' mod in list]")
+        logger.warning(f"[{self.name}] does't have '{mod.name}' mod in list]")
 
     @classmethod
     def enable_for_all(cls, mod: Mod, profiles=None):
@@ -192,7 +191,7 @@ New name will be changed on save")
     @classmethod
     def list_profiles(cls):
         if not config.profiles_dir.is_dir():
-            logger.warn("Profiles directory is not found")
+            logger.warning("Profiles directory is not found")
             return
 
         for filename in config.profiles_dir.rglob("*.json"):

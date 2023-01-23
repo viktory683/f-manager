@@ -1,9 +1,8 @@
 import subprocess
 
-import config
-import exceptions
-from logger import logger
-from mods_profile import Profile, TempProfile
+from . import config, exceptions
+from .logger import logger
+from .mods_profile import Profile, TempProfile
 
 # TODO sync save with profile
 
@@ -21,7 +20,9 @@ class Launcher:
     def run(self, save: Save = None):
         # TODO load save
 
-        # TODO test scenario where game relaunches (game save mods synchronization)
+        # TODO test scenario where game relaunches\
+        # TODO (game save mods synchronization)
+
         # TODO can drop to default factorio mod_list.json file
 
         if not config.game_folder.is_dir():

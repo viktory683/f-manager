@@ -6,9 +6,8 @@ from functools import reduce
 import requests
 from bs4 import BeautifulSoup
 
-import config
-import exceptions
-from logger import logger
+from . import config, exceptions
+from .logger import logger
 
 
 class Mod:
