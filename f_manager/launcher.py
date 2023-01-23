@@ -8,16 +8,51 @@ from .mods_profile import Profile, TempProfile
 
 
 class Save:
+    # TODO
     # implements game save
     pass
 
 
 class Launcher:
+    """
+    A class to represent a game launcher
+
+    ...
+
+    Attributes
+    ----------
+
+    Methods
+    -------
+    run(save: Save = None):
+        Runs the game with given save
+    """
+
     def __init__(self, profile: Profile = None):
-        self.temp_profile = TempProfile(profile)
+        """
+        Initialize the launcher with the given profile
+
+        Parameters
+        ----------
+            profile : Profile, optional
+                profile you want to load
+        """
+        self._temp_profile = TempProfile(profile)
         self.run()
 
     def run(self, save: Save = None):
+        """
+        Runs the game with given save
+
+        Parameters
+        ----------
+            save : Save, optional
+                game save of <class 'Save'>
+
+        Returns
+        -------
+        None
+        """
         # TODO load save
 
         # TODO test scenario where game relaunches\
@@ -28,7 +63,7 @@ class Launcher:
         if not config.game_folder.is_dir():
             raise exceptions.FileNotFoundException(config.game_folder)
 
-        self.temp_profile.activate()
+        self._temp_profile.activate()
 
         game_path = (
             config.game_folder
@@ -44,6 +79,6 @@ class Launcher:
             f"{game_path} --mod-directory {mods_path}", shell=True
         )
 
-        self.temp_profile.deactivate()
+        self._temp_profile.deactivate()
 
         logger.info("Bye!")

@@ -1,4 +1,5 @@
 import json
+from typing import Generator
 import urllib.parse as urlparse
 import zipfile
 from functools import reduce
@@ -11,10 +12,56 @@ from .logger import logger
 
 
 class Mod:
-    # TODO docstring
+    """
+    A class to represent a mod.
+
+    ...
+
+    Attributes
+    ----------
+    name : str
+        name of the mod
+    enabled : bool
+        special info for the profile
+    downloaded : bool
+        is mod exists in the mods folder
+    version : str
+        version of the mod
+    dependencies : dict[str, list[Mod]]
+        mod dependencies
+        dict format is
+        {
+            "require": [],
+            "optional": [],
+            'conflict': [],
+            "parent": []
+        }
+    downloaded_mods : Generator[Mod]
+        Check for list of downloaded mods
+
+    Methods
+    -------
+    update():
+        Check for the new version of the mod.
+    upgrade():
+        Updates the version of the mod and downloads it
+    remove():
+        Removes the mod with his dependencies
+    """
+
     # TODO refactor and reformat
     # TODO add if mod is not dependents of 'base' but dependents on factorio version
     def __init__(self, name, enabled=True):
+        """
+        Constructs all the necessary attributes for the mod object.
+
+        Parameters
+        ----------
+            name : str
+                name of the mod
+            enabled : bool, optional
+                special info for the profile
+        """
         self.name = name
         self.enabled = enabled
         self._downloaded = None
@@ -218,7 +265,17 @@ Status code: {response.status_code}""")
             if not mod.downloaded:
                 mod.download()
 
-    def update(self):
+    def update(self) -> None | dict:
+        """
+        Check for the new version of the mod
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        None | dict
+        """
         if not self.downloaded:
             raise exceptions.ModNotFoundError(self.name)
 
@@ -241,6 +298,16 @@ Status code: {response.status_code}""")
         return self._has_new_version
 
     def upgrade(self):
+        """
+        Updates the version of the mod and downloads it
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        None
+        """
         if not (new_release := self.update()):
             logger.warning(
                 f"The latest version of '{self.name}' already installed")
@@ -255,6 +322,16 @@ Status code: {response.status_code}""")
         )
 
     def remove(self):
+        """
+        Removes the mod with his dependencies
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        None
+        """
         if self.name == "base":
             raise exceptions.BaseModRemoveError()
 
@@ -303,9 +380,31 @@ Status code: {response.status_code}""")
                     dependency.remove()
 
     @classmethod
-    def search_mods(cls, query, version="any", search_order="downloaded"):
-        # search mods.factorio.com for mods containing *query*
-        # search_order: [updated, downloaded]
+    def search_mods(
+            cls,
+            query,
+            version="any",
+            search_order="downloaded"
+    ) -> Generator[dict] | None:
+        """
+        Search mod portal (mods.factorio.com) for the mod
+
+        Parameters
+        ----------
+            query : str
+                name of the mod to search
+            version : str, optional
+                version of the mod to search
+            search_order : str, optional
+                result sorting
+                known variants: [downloaded, updated]
+
+        Returns
+        -------
+        Generator[dict] | None
+
+        """
+
         # TODO optimize FOR cycle
 
         if search_order not in ["updated", "downloaded"]:
@@ -355,7 +454,17 @@ Status code: {response.status_code}""")
 
     @classmethod
     @property
-    def downloaded_mods(cls):
+    def downloaded_mods(cls) -> Generator:
+        """
+        Check for list of downloaded mods
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        Generator[Mod]
+        """
         yield Mod("base")
         for filename in config.mods_file.parent.rglob("*.zip"):
             mod_name = filename.stem.rsplit("_", 1)[0]
