@@ -385,7 +385,7 @@ Status code: {response.status_code}""")
             query,
             version="any",
             search_order="downloaded"
-    ) -> Generator[dict] | None:
+    ) -> Generator | None:
         """
         Search mod portal (mods.factorio.com) for the mod
 
