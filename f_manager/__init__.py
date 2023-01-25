@@ -1,8 +1,9 @@
-from . import config, exceptions
-from .launcher import Launcher
-from .logger import logger
-from .mod import Mod
-from .mods_profile import Profile, TempProfile
+from f_manager import config, exceptions
+from f_manager.launcher import Launcher, Save
+from f_manager.logger import logger
+from f_manager.mods import Mod, ModController
+from f_manager.profiles import Profile, TempProfile
+from f_manager.version import Version
 
 # NOTE load profiles without using --mod-directory option
 # NOTE no need at all to create a lot of folder containing ~1GB of mods
@@ -34,7 +35,7 @@ from .mods_profile import Profile, TempProfile
 # ! newly downloaded mod updates all profiles too
 # ! so set and length of mods in profiles will be always the same
 
-# ! if profile has mod that is not been downloaded ask user to download it
+# ! if profile has mod that is not being downloaded ask user to download it
 # ! (on load that profile need to be extended of all downloaded mods)
 
 # *
@@ -46,5 +47,5 @@ from .mods_profile import Profile, TempProfile
 # V delete mod/mods
 #     V disable/enable for all
 #     V download
-#     V upgrade
+#     V upgrade mod
 #         V upgrade only mods from profile

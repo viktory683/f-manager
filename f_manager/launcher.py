@@ -1,15 +1,17 @@
 import subprocess
 
-from . import config, exceptions
-from .logger import logger
-from .mods_profile import Profile, TempProfile
-
-# TODO sync save with profile
+from f_manager import config, exceptions
+from f_manager.logger import logger
+from f_manager.profiles import Profile, TempProfile
 
 
 class Save:
-    # TODO
-    # implements game save
+    """Implements game save
+
+    TODO:
+        * Write this shit
+        * sync save with ``Profile``
+    """
     pass
 
 
@@ -33,13 +35,11 @@ class Launcher:
 
         Returns:
             None
+
+        TODO:
+            * load save
+            * test scenario where game relaunches (maybe game save mods synchronization) so can drop to default factorio `mod_list.json` file
         """
-        # TODO load save
-
-        # TODO test scenario where game relaunches\
-        # TODO (game save mods synchronization)
-
-        # TODO can drop to default factorio mod_list.json file
 
         if not config.game_folder.is_dir():
             raise exceptions.FileNotFoundException(config.game_folder)

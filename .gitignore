@@ -134,3 +134,6 @@ dmypy.json
 
 # custom
 profiles/
+
+settings.env
+test.py

@@ -2,9 +2,9 @@ import json
 import pathlib
 import shutil
 
-from . import config, exceptions
-from .logger import logger
-from .mod import Mod
+from f_manager import config, exceptions
+from f_manager.logger import logger
+from f_manager.mods import Mod
 
 
 class Profile:
@@ -12,6 +12,10 @@ class Profile:
 
     Attributes:
         name (str): name of the profile
+
+    TODO:
+        * check for new Mod methods usage
+        * use ModController methods
     """
 
     def __init__(self, name: str = "default", save_dir: pathlib.Path = None):
@@ -225,7 +229,7 @@ New name will be changed on save")
 
                 return
 
-        logger.warning(f"[{self.name}] does't have '{mod.name}' mod in list]")
+        logger.warning(f"[{self.name}] doesn't have '{mod.name}' mod in list]")
 
     @classmethod
     def enable_for_all(cls, mod, profiles=None):
@@ -321,6 +325,12 @@ New name will be changed on save")
 
         for filename in config.profiles_dir.rglob("*.json"):
             yield Profile(filename.stem)
+
+    def __str__(self) -> str:
+        return self.name
+
+    def __repr__(self):
+        return f"""<class '{__class__.__name__}' name: '{self.name}'>"""
 
 
 class TempProfile(Profile):

@@ -1,7 +1,7 @@
 import logging
 import sys
 
-from . import config
+from f_manager import config
 
 
 class ColoredFormatter(logging.Formatter):
