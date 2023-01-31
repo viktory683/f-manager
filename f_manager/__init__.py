@@ -1,9 +1,13 @@
-from f_manager import config, exceptions
-from f_manager.launcher import Launcher, Save
-from f_manager.logger import logger
-from f_manager.mods import Mod, ModController
-from f_manager.profiles import Profile, TempProfile
-from f_manager.version import Version
+from f_manager import _config as config
+from f_manager import _exceptions as exceptions
+from f_manager import _helpers as helpers
+from f_manager._launcher import Launcher, Save
+from f_manager._logger import logger
+from f_manager._mod import Mod, ModController
+from f_manager._profile import Profile, TempProfile
+
+# TODO:
+#     * should be better to put here some docs of module
 
 # NOTE load profiles without using --mod-directory option
 # NOTE no need at all to create a lot of folder containing ~1GB of mods

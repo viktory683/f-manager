@@ -1,8 +1,8 @@
 import subprocess
 
 from f_manager import config, exceptions
-from f_manager.logger import logger
-from f_manager.profiles import Profile, TempProfile
+from f_manager._logger import logger
+from f_manager._profile import Profile, TempProfile
 
 
 class Save:
@@ -11,7 +11,9 @@ class Save:
     TODO:
         * Write this shit
         * sync save with ``Profile``
+
     """
+
     pass
 
 
@@ -23,7 +25,9 @@ class Launcher:
 
         Args:
             profile (Profile, optional): profile you want to load
+
         """
+
         self._temp_profile = TempProfile(profile)
         self.run()
 
@@ -38,8 +42,13 @@ class Launcher:
 
         TODO:
             * load save
-            * test scenario where game relaunches (maybe game save mods synchronization) so can drop to default factorio `mod_list.json` file
+            * test scenario where game relaunches (maybe game save mods synchronization) so can drop to default
+                factorio `mod_list.json` file
+
         """
+
+        if not isinstance(save, Save):
+            raise TypeError("'save' entities should be of type 'Save'")
 
         if not config.game_folder.is_dir():
             raise exceptions.FileNotFoundException(config.game_folder)

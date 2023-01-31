@@ -1,8 +1,6 @@
 from unittest import TestCase
 
-from f_manager.mods import parse_dependency
-from f_manager.version import parse_version, Version
-
+from f_manager._helpers import parse_dependency
 
 class DependencyTest(TestCase):
     deps = [
@@ -60,30 +58,3 @@ class DependencyTest(TestCase):
             parsed_keys.remove("category")
             val = parsed.get(parsed_keys[0]) if parsed_keys else None
             self.assertEqual(dep[4], val)
-
-
-class VersionTest(TestCase):
-
-    versions = [
-        ["1.1.2", (1, 1, 2)],
-        ["3.0.0", (3, 0, 0)],
-        ["0.18", (0, 18)],
-        ["1.1.70", (1, 1, 70)],
-        ["3.0.8", (3, 0, 8)],
-        ["0.4.3", (0, 4, 3)],
-        ["1.3.0", (1, 3, 0)],
-        ["0.9.2", (0, 9, 2)],
-        ["0.0.11", (0, 0, 11)],
-    ]
-
-    def test_parse_version(self):
-        for version in self.versions:
-            self.assertEqual(version[1], parse_version(version[0]))
-
-    def test_version_comparison(self):
-        self.assertTrue(Version("1.1.1") >= (1, 1, 0))
-        self.assertTrue(Version("1.1.1") >= Version("1.1.0"))
-        self.assertTrue(Version("1.2") >= Version("1.1"))
-        self.assertTrue(Version("1.2") >= Version("1.1.19"))
-        self.assertTrue(Version("2.2") >= Version("1.9.0.100000"))
-        self.assertFalse(Version("1.2") >= Version("2.1"))

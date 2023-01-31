@@ -1,34 +1,9 @@
-from typing import Any
+from typing import Iterable
 
 
 class classproperty(property):
     def __get__(self, owner_self, owner_cls):
         return self.fget(owner_cls)
-
-
-def parse_version(version_raw: str) -> tuple[int]:
-    """
-
-    Args:
-        version_raw (str): raw version string like `1.2.3`
-
-    Returns:
-        tuple[int]: list of version pieces like ``(1, 2, 3)``
-    """
-
-    version = []
-
-    piece = ""
-    for ch in version_raw:
-        if ch.isdigit():
-            piece += ch
-        else:
-            version.append(int(piece))
-            piece = ""
-
-    version.append(int(piece))
-
-    return tuple(version)
 
 
 def parse_dependency(dep_raw: str) -> dict[str, str]:
@@ -55,7 +30,8 @@ def parse_dependency(dep_raw: str) -> dict[str, str]:
         }
 
     Note:
-        `min_version`, `max_version`, `from_min_version`, `to_max_version` and `version` may be missing if nobody gives a fuck which version of the mod
+        `min_version`, `max_version`, `from_min_version`, `to_max_version` and `version` may be missing
+        if nobody gives a fuck which version of the mod
 
         MOD_CATEGORY: ["optional", "conflict", "parent", "require"]
 
@@ -71,7 +47,12 @@ def parse_dependency(dep_raw: str) -> dict[str, str]:
 
     Returns:
         dict[str, str]: dependencies dictionary
-"""
+
+    TODO:
+        * what the fuck is that
+        * make different docstring for Mod.dependencies or for that
+
+    """
 
     dep = {}
 
@@ -128,3 +109,34 @@ def parse_dependency(dep_raw: str) -> dict[str, str]:
             dep["name"] = name
 
     return dep
+
+
+def friendly_list(words: Iterable[str], joiner: str = "or", omit_empty: bool = True) -> str:
+    """Generate a list of words as readable prose.
+
+    >>> friendly_list(["foo", "bar", "baz"])
+    "'foo', 'bar', or 'baz'"
+
+    Note:
+        Stolen from textual (https://github.com/Textualize/textual)
+
+    Args:
+        words: A list of words.
+        joiner: The last joiner word. Defaults to "or".
+        omit_empty: Should result containing None or not. (skip None)
+
+    Returns:
+        List as prose.
+
+    """
+
+    words = [
+        repr(word) for word in sorted(words, key=str.lower) if word or not omit_empty
+    ]
+    if len(words) == 1:
+        return words[0]
+    elif len(words) == 2:
+        word1, word2 = words
+        return f"{word1} {joiner} {word2}"
+    else:
+        return f'{", ".join(words[:-1])}, {joiner} {words[-1]}'

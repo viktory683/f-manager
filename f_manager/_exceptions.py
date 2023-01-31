@@ -1,14 +1,35 @@
+class InvalidSearchOrder(Exception):
+    pass
+
+
+class APIcallError(Exception):
+    def __init__(self, response):
+        """
+        Args:
+            response (Response): response
+
+        TODO:
+            * Check that response is not empty
+            * different status codes messages
+
+        """
+
+        super().__init__(response.status_code)
+
+
+class DependencyRemove(Exception):
+    pass
+
+
 class FileNotFoundException(Exception):
     def __init__(self, filename, *args):
         if args:
             super().__init__(
-                f"""File {filename} is not found. Check your configuration \
-settings for {', '.join(*args)} variables"""
+                f"""File {filename} is not found. Check your configuration settings for {', '.join(*args)} variables"""
             )
         else:
             super().__init__(
-                f"""File {filename} is not found. \
-Check your configuration settings."""
+                f"""File {filename} is not found. Check your configuration settings."""
             )
 
 
