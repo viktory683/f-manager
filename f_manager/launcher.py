@@ -1,16 +1,16 @@
 import subprocess
 
 from f_manager import config, exceptions
-from f_manager._logger import logger
-from f_manager._profile import Profile, TempProfile
+from f_manager.logger import logger
+from f_manager.profile import Profile, TempProfile
 
 
 class Save:
     """Implements game save
 
     TODO:
-        * Write this shit
-        * sync save with ``Profile``
+        - Write this shit
+        - sync save with ``Profile``
 
     """
 
@@ -41,9 +41,9 @@ class Launcher:
             None
 
         TODO:
-            * load save
-            * test scenario where game relaunches (maybe game save mods synchronization) so can drop to default
-                factorio `mod_list.json` file
+            - load save
+            - test scenario where game relaunches (maybe game save mods synchronization) so can drop to default factorio
+                `mod_list.json` file
 
         """
 

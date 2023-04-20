@@ -9,8 +9,8 @@ class APIcallError(Exception):
             response (Response): response
 
         TODO:
-            * Check that response is not empty
-            * different status codes messages
+            - check that response is not empty
+            - different status codes messages
 
         """
 
@@ -58,7 +58,7 @@ class ModNotFoundError(Exception):
         super().__init__(f"'{mod_name}' was not found")
 
 
-class ModAlreadyExistsError(Exception):
+class ModExistsError(Exception):
     def __init__(self, mod_name):
         super().__init__(f"'{mod_name}' already exists")
 

@@ -3,9 +3,8 @@ import pathlib
 import shutil
 
 from f_manager import config, exceptions
-from f_manager._helpers import classproperty
-from f_manager._logger import logger
-from f_manager._mod import Mod, ModController
+from f_manager.logger import logger
+from f_manager.mod import Mod, ModController
 
 
 class Profile:
@@ -181,7 +180,7 @@ class Profile:
             None
 
         TODO:
-            * enable with ``depends_on`` mods
+            - enable with ``depends_on`` mods
 
         """
 
@@ -209,7 +208,7 @@ class Profile:
             None
 
         TODO:
-            * disable with ``required_by`` mods
+            - disable with ``required_by`` mods
 
         """
 
@@ -242,7 +241,7 @@ class Profile:
             None
 
         TODO:
-            * add with ``depends_on`` mods
+            - add with ``depends_on`` mods
 
         """
 
@@ -268,7 +267,7 @@ class Profile:
             None
 
         TODO:
-            * remove with ``required_by`` mods
+            - remove with ``required_by`` mods
 
         """
 
@@ -421,8 +420,8 @@ class Profile:
             profile.remove(mod)
             profile.save()
 
-    @classproperty
-    def list_profiles(cls):
+    @property
+    def list_profiles(self):
         """Generator[Profile, Any, Any]: a list of profiles in save_dir"""
 
         if not config.profiles_dir.is_dir():
@@ -449,7 +448,7 @@ class TempProfile(Profile):
             profile (Profile, optional): base profile
 
         TODO:
-            * optimize profile usage using ``super`` variables and not only ``profile.name``
+            - optimize profile usage using ``super`` variables and not only ``profile.name``
 
         """
 
@@ -478,7 +477,7 @@ class TempProfile(Profile):
         if not config.mods_file.is_file():
             raise exceptions.FileNotFoundException(config.mods_file)
 
-        downloaded_mods = ModController.downloaded
+        downloaded_mods = ModController().downloaded
         profile_mods = self.mods
 
         mod_list = []

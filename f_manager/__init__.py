@@ -1,10 +1,11 @@
-from f_manager import _config as config
-from f_manager import _exceptions as exceptions
-from f_manager import _helpers as helpers
-from f_manager._launcher import Launcher, Save
-from f_manager._logger import logger
-from f_manager._mod import Mod, ModController
-from f_manager._profile import Profile, TempProfile
+from f_manager import exceptions  # noqa: F401
+from f_manager import helpers  # noqa: F401
+from f_manager.config import config  # noqa: F401
+from f_manager.factorioapi import FactorioAPI  # noqa: F401
+from f_manager.launcher import Launcher, Save  # noqa: F401
+from f_manager.logger import logger  # noqa: F401
+from f_manager.mod import Mod, ModController  # noqa: F401
+from f_manager.profile import Profile, TempProfile  # noqa: F401
 
 # TODO:
 #     * should be better to put here some docs of module

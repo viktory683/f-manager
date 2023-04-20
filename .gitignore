@@ -132,8 +132,4 @@ dmypy.json
 .vscode/
 .idea/
 
-# custom
-profiles/
-
-settings.env
 test.py

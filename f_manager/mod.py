@@ -1,58 +1,63 @@
+from __future__ import annotations
+
 import json
 import pathlib
 import urllib.parse as urlparse
 import zipfile
 from difflib import SequenceMatcher
-from typing import Any, Generator, Literal
+from typing import Any, Literal, Iterable
 
 import requests
 from packaging.version import Version
 
 from f_manager import config, exceptions
-from f_manager._helpers import classproperty, friendly_list, parse_dependency
-from f_manager._logger import logger
+from f_manager.helpers import friendly_list, parse_dependency
+from f_manager.logger import logger
 
 
 class Mod:
     """A class to represent a mod.
 
     Attributes:
-        name (str): name of the mod
-        enabled (bool): special info for the profile
+        name (str): Name of the mod
 
     TODO:
-        * check for using config values and add foolproof
-        * refactor and reformat
-        * add if mod is not dependents of `base` but dependents on factorio version
-        * remove orphans?
+        - check for using config values and add foolproof
+        - refactor and reformat
+        - add if mod is not dependents of `base` but dependents on factorio version
+        - remove orphans?
 
     """
 
-    def __init__(self, name, enabled: bool = True):
-        """Creates Mod object
+    def __init__(self, name: str, filename: str | pathlib.Path = None):
+        """Initializes a Mod instance with the given instance attributes.
 
         Args:
             name (str): name of the mod
-            enabled (bool, optional): special info for the profile
         """
 
         if not isinstance(name, str):
             raise TypeError("'name' should be of type 'str'")
 
-        if not isinstance(enabled, bool):
-            raise TypeError("'enabled' should be of type 'bool'")
-
         self.name = name
-        self.enabled = enabled
         self._filename = None
         self._info = None
+
+        # name
+        # version
+        # title
+        # author
+        # dependencies
+        # description
+        # factorio_version
+        # homepage
 
     def clear(self):
         self._filename = None
         self._info = None
 
     @classmethod
-    def name(cls, mod) -> str:
+    def name(cls, mod: Mod) -> str:
         """Class method to use with 'map' or something
 
         Args:
@@ -64,7 +69,7 @@ class Mod:
         """
 
         if not isinstance(mod, Mod):
-            raise TypeError("'mod' argument has to be of the 'Mod' type")
+            raise TypeError("The object must be an instance of Mod or its subclass")
 
         return mod.name
 
@@ -82,17 +87,14 @@ class Mod:
             return self._filename
 
         if self.name == "base":
-            if not config.game_folder.is_dir():
-                raise exceptions.FileNotFoundException(config.game_folder)
-
             self._filename = (
-                config.game_folder
+                config.base_dir
                 .joinpath("data")
                 .joinpath("base")
                 .joinpath("info.json")
             )
         else:
-            if not config.mods_file.is_file():
+            if not config.mods_dir.joinpath("mods").joinpath("").is_file():
                 raise exceptions.FileNotFoundException(config.mods_file)
 
             for file in config.mods_file.parent.rglob("*.zip"):
@@ -221,7 +223,7 @@ class Mod:
             list[dict[str, str | Version]]: dependencies dictionary
 
         TODO:
-            * save results
+            - save results
 
         """
         return [
@@ -254,13 +256,13 @@ class Mod:
         """list[Mod]: of dependencies
 
         TODO:
-            * save results
+            - save results
 
         """
 
         deps = []
 
-        for mod in ModController.downloaded:
+        for mod in ModController().downloaded:
             deps.extend(
                 mod
                 for dependency in mod.dependencies
@@ -275,13 +277,13 @@ class Mod:
         """list[Mod]: of dependencies
 
         TODO:
-            * save results
+            - save results
 
         """
 
         deps = []
 
-        for mod in ModController.downloaded:
+        for mod in ModController().downloaded:
             deps.extend(
                 mod
                 for dependency in mod.dependencies
@@ -320,7 +322,7 @@ class ModController:
         pass
 
     @classmethod
-    def remove(cls, mod: Mod | str, with_required=False, force=False):
+    def remove(cls, mod: Mod | str, with_required_by=False, with_depends_on=False, force=False):
         """Removes the mod and his dependencies
 
         Note:
@@ -328,7 +330,8 @@ class ModController:
 
         Args:
             mod: mod to remove
-            with_required (bool): remove with mods from ``required_by`` list (ignoring ``DependencyRemove`` exception)
+            with_required_by (bool): remove with mods from ``required_by`` list (ignoring ``DependencyRemove``
+                exception)
             force (bool): ignore all and remove
 
         Returns:
@@ -349,17 +352,18 @@ class ModController:
             logger.warning(f"'{mod.name}' is not exists. Ignoring")
             return
 
-        if (required_by := mod.required_by) and not with_required and not force:
+        required_by = mod.required_by
+        if required_by and not with_required_by and not force:
             raise exceptions.DependencyRemove(
                 f"'{mod.name}' is required by "
-                f"{friendly_list(map(Mod.name, required_by), 'and')}"
+                f"{friendly_list(map(lambda _mod: _mod.name, required_by), 'and')}"
             )
 
         depends_on = list(map(lambda m: Mod(m.get("name")), mod.depends_on))
 
-        if required_by and with_required:
+        if required_by and with_required_by:
             for dep in required_by:
-                depends_on.extend(cls.remove(dep, with_required))
+                depends_on.extend(cls.remove(dep, with_required_by))
 
         mod.filename.unlink()
 
@@ -378,8 +382,8 @@ class ModController:
         return sorted(list(map(Mod, deps_names_set)), key=lambda m: m.name)
 
     @classmethod
-    def download(cls, mod: Mod | str, reinstall=False, with_dependencies=False, soft=False):
-        """Download mod from mod portal
+    def download(cls, mod: str | Mod, reinstall=False, with_dependencies=True, soft=False):
+        """Download mod from mod portal with all necessary dependencies
 
         Args:
             mod: mod to download
@@ -397,10 +401,10 @@ class ModController:
             APIcallError: Some troubles with connecting to the server
 
         TODO:
-            * optimize for cycle to not trying to download the same mod thousand times
-            * check for current factorio/base version with compatible mod version
-            * validate checksum
-            * split into smaller methods
+            - optimize for cycle to not trying to download the same mod thousand times
+            - check for current factorio/base version with compatible mod version
+            - validate checksum
+            - split into smaller methods
 
         """
 
@@ -410,9 +414,9 @@ class ModController:
             logger.exception("'reinstall' argument should be of type 'bool'")
             raise TypeError("'reinstall' argument should be of type 'bool'")
 
-        if not isinstance(with_dependencies, bool):
-            logger.exception("'with_dependencies' argument should be of type 'bool'")
-            raise TypeError("'with_dependencies' argument should be of type 'bool'")
+        # if not isinstance(with_dependencies, bool):
+        #     logger.exception("'with_dependencies' argument should be of type 'bool'")
+        #     raise TypeError("'with_dependencies' argument should be of type 'bool'")
 
         if mod.name == "base":
             return
@@ -420,7 +424,7 @@ class ModController:
         if mod.filename and not reinstall:
             logger.exception(f"ModAlreadyExistsError exception with {mod.name}")
             if not soft:
-                raise exceptions.ModAlreadyExistsError(mod.name)
+                raise exceptions.ModExistsError(mod.name)
             else:
                 return
 
@@ -433,7 +437,8 @@ class ModController:
             player_data = json.load(f)
             username, token = player_data.get('service-username'), player_data.get('service-token')
 
-        if (response := cls._api_mods_full(mod.name)).status_code != 200:
+        response = cls._api_mods_full(mod.name)
+        if response.status_code != 200:
             logger.exception(f"APIcallError with {response.status_code}")
             if not soft:
                 raise exceptions.APIcallError(response)
@@ -452,7 +457,8 @@ class ModController:
         }
         url = url + urlparse.urlencode(url_params)
 
-        if (mod_response := requests.get(url)).status_code != 200:
+        mod_response = requests.get(url)
+        if mod_response.status_code != 200:
             logger.exception(f"APIcallError with {mod_response.status_code}")
             if not soft:
                 raise exceptions.APIcallError(mod_response)
@@ -482,6 +488,45 @@ class ModController:
                 logger.info(f"Installing {dep.get('name')} from '{mod}'")
                 cls.download(dep.get("name"), reinstall, with_dependencies, soft)
 
+    def download_new(self, mod: str | Mod = None, mods: Iterable[str | Mod] = None, reinstall: bool = False):
+        """
+
+        check mod | list of mods dependencies and collect them to a list
+        check for already installed
+            if the same version as remote already installed then fuck it
+        check for conflicts
+
+        if mod already installed then reinstall (without dependencies and the same version)
+
+        """
+
+        if not mod and not mods:
+            raise TypeError(f"{__class__.__name__}.download() missing 1 required argument: 'mod' or 'mods'")
+        elif mod and mods:
+            raise TypeError(f"{__class__.__name__}.download() takes only argument: 'mod' or 'mods' and not both "
+                            f"together")
+
+        if mod:
+            if isinstance(mod, str):
+                mod = Mod(mod)
+            elif mod is not None:
+                raise TypeError(f"mod must be Mod or a string, not {type(mod).__name__}")
+            mods = [mod]
+        elif mods:
+            if not isinstance(mods, Iterable):
+                raise TypeError(f"mods must be Iterable not {type(mods).__name__}")
+            if all(map(lambda _mod: isinstance(_mod, str), mods)):
+                mods = map(lambda mod_name: Mod(mod_name), mods)
+            if not all(map(lambda _mod: isinstance(_mod, Mod), mods)):
+                raise TypeError("mods must be Iterable[Mod] or Iterable[str]")
+
+        # check if mod already installed
+        for mod in mods:
+            if mod.filename and not reinstall:
+                raise exceptions.ModExistsError(f"{mod.name} already exists")
+            elif not reinstall:
+                pass
+
     @classmethod
     def _api_mods_full(cls, mod_name: str):
         """Call to mod portal API (mods/MOD_NAME/full)
@@ -509,7 +554,7 @@ class ModController:
             Version | None: The new version of the mod, or None otherwise
 
         TODO:
-            * check for current factorio/base version with compatible mod version
+            - check for current factorio/base version with compatible mod version
 
         """
 
@@ -521,7 +566,8 @@ class ModController:
         if not mod.filename:
             raise exceptions.ModNotFoundError(mod.name)
 
-        if (response := cls._api_mods_full(mod.name)).status_code != 200:
+        response = cls._api_mods_full(mod.name)
+        if response.status_code != 200:
             logger.exception(f"APIcallError with {response.status_code}")
             raise exceptions.APIcallError(response.status_code)
 
@@ -540,7 +586,7 @@ class ModController:
             None
 
         TODO:
-            * optimize not to calling API twice for update and download
+            - optimize not to calling API twice for update and download
 
         """
 
@@ -568,16 +614,17 @@ class ModController:
 
 
         TODO:
-            * choose category
-            * prevent loading full list of mods
-            * filter by current factorio version
+            - choose category
+            - prevent loading full list of mods
+            - filter by current factorio version
 
         """
 
         if not isinstance(query, str):
             query = str(query)
 
-        if (response := cls.call_api_mods(page_size="max")).status_code != 200:
+        response = cls.call_api_mods(page_size="max")
+        if response.status_code != 200:
             logger.exception(f"APIcallError with {response.status_code}")
             raise exceptions.APIcallError(response)
 
@@ -599,8 +646,8 @@ class ModController:
         """
 
         TODO:
-            * check for original factorio sort order (or made better)
-            * drop entities which are not needed at all (SequenceMatcher().radio() == 0 for example)
+            - check for original factorio sort order (or made better)
+            - drop entities which are not needed at all (SequenceMatcher().radio() == 0 for example)
 
         """
 
@@ -676,24 +723,28 @@ class ModController:
         if any(key not in known_keys for key in params):
             raise KeyError(f"API accepts only {friendly_list(known_keys, 'and')} keys")
 
-        if (hide_deprecated := params.get("hide_deprecated")) is not None:
+        hide_deprecated = params.get("hide_deprecated")
+        if hide_deprecated is not None:
             if not isinstance(hide_deprecated, bool):
                 raise TypeError("'hide_deprecated' keyword argument has to be of type 'bool'")
             params["hide_deprecated"] = bool(hide_deprecated)
 
-        if (page := params.get("page")) is not None:
+        page = params.get("page")
+        if page is not None:
             if not isinstance(page, int):
                 raise TypeError("'page' keyword argument has to be of type 'int'")
             if int(page) < 1:
                 page = 1
             params["page"] = int(page)
 
-        if (page_size := params.get("page_size")) is not None:
+        page_size = params.get("page_size")
+        if page_size is not None:
             if (not isinstance(page_size, (int, str))) or (isinstance(page_size, str) and page_size != "max"):
                 raise TypeError("'page_size' keyword argument has to be of type 'int' or Literal[\"max\"]")
             params["page_size"] = page_size
 
-        if sort := params.get("sort"):
+        sort = params.get("sort")
+        if sort:
             if not isinstance(sort, str):
                 raise TypeError("'sort' keyword argument has to be of type 'str'")
             elif sort not in ["name", "created_at", "updated_at"]:
@@ -701,12 +752,14 @@ class ModController:
                     "'sort' keyword argument has to be of type Literal[\"name\", \"created_at\", \"updated_at\"]")
             params["sort"] = sort
 
-        if sort_order := params.get("sort_order"):
+        sort_order = params.get("sort_order")
+        if sort_order:
             if sort_order not in ["asc", "desc"]:
                 raise TypeError("'sort' keyword argument has to be of type Literal[\"asc\", \"desc\"]")
             params["sort_order"] = sort_order
 
-        if namelist := params.get("namelist"):
+        namelist = params.get("namelist")
+        if namelist:
             if not isinstance(namelist, (list, str)):
                 raise TypeError("'name_list' keyword argument has to be of type 'list'")
             if isinstance(namelist, list) and not all(isinstance(name, str) for name in namelist):
@@ -715,7 +768,8 @@ class ModController:
                 namelist = [namelist]
             params["namelist"] = namelist
 
-        if version := params.get("version"):
+        version = params.get("version")
+        if version:
             if not isinstance(version, (Version, str)):
                 raise TypeError("'version' keyword argument has to be of type 'Version' or 'str'")
             params["version"] = version
@@ -737,12 +791,10 @@ class ModController:
             mod = Mod(mod)
         return mod
 
-    @classproperty
-    def downloaded(cls) -> Generator[Mod, Any, Any]:
-        if not config.mods_file.parent.is_dir():
-            raise exceptions.FileNotFoundException(config.mods_file.parent)
+    @property
+    def downloaded(self) -> Iterable[Mod]:
+        with config.mods_file.open() as f:
+            mods_list = json.load(f).get("mods")
 
-        yield Mod("base")
-
-        for filename in config.mods_file.parent.rglob("*.zip"):
-            yield Mod(filename.stem.rsplit("_", 1)[0])
+        for mod_dict in mods_list:
+            yield Mod(mod_dict.get("name"))
