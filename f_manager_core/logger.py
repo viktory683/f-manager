@@ -1,8 +1,6 @@
 import logging
 import sys
 
-from f_manager import config
-
 
 class ColoredFormatter(logging.Formatter):
     grey = "\x1b[38;20m"
@@ -17,7 +15,7 @@ class ColoredFormatter(logging.Formatter):
         logging.INFO: grey + format + reset,
         logging.WARNING: yellow + format + reset,
         logging.ERROR: red + format + reset,
-        logging.CRITICAL: bold_red + format + reset
+        logging.CRITICAL: bold_red + format + reset,
     }
 
     def format(self, record):
@@ -27,16 +25,13 @@ class ColoredFormatter(logging.Formatter):
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(config.loglevel)
 
 stdout_handler = logging.StreamHandler(stream=sys.stdout)
 stdout_handler.setFormatter(ColoredFormatter())
 
 file_handler = logging.FileHandler(f"{__name__}.log")
 file_handler.setFormatter(
-    logging.Formatter(
-        fmt='[%(asctime)s: %(levelname)s] %(message)s'
-    )
+    logging.Formatter(fmt="[%(asctime)s: %(levelname)s] %(message)s")
 )
 
 logger.addHandler(stdout_handler)
