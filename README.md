@@ -12,10 +12,6 @@ Example of profile file
 ```
 +/- = enabled/disabled
 
-core don't have to check or create or change configs!
-
-but cat use logging
-
 ## To-Do
 
 - [ ] Docs for module itself

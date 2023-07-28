@@ -35,5 +35,5 @@ setup(
         "tqdm==4.65.0",
         "urllib3==1.26.14"
     ],
-    package_data={'f_manager_core': ['config/*', 'factorio/*']}
+    package_data={'f_manager_core': ['configs/*', 'factorio/*']}
 )
