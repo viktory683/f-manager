@@ -12,7 +12,7 @@ class Links:
         self.__dict__ = json_data
 
     def __repr__(self) -> str:
-        return f"Links(first={self.first}, prev={self.prev}, next={self.next}, last={self.last})"
+        return f"Links(first='{self.first}', prev='{self.prev}', next='{self.next}', last='{self.last}')"
 
 
 class Pagination:
@@ -28,7 +28,7 @@ class Pagination:
         self.links = Links(json_data["links"])
 
     def __repr__(self) -> str:
-        return f"Pagination(count={self.count}, links={self.links}, page={self.page}, page_count={self.page_count}, page_size={self.page_size})"
+        return f"Pagination(count='{self.count}', links='{self.links}', page='{self.page}', page_count='{self.page_count}', page_size='{self.page_size}')"
 
 
 class ModInfoShort:
@@ -39,7 +39,7 @@ class ModInfoShort:
         self.__dict__ = json_data
 
     def __repr__(self) -> str:
-        return f"ModInfoShort(factorio_version={self.factorio_version}, dependencies={self.dependencies})"
+        return f"ModInfoShort(factorio_version='{self.factorio_version}', dependencies='{self.dependencies}')"
 
 
 class Release:
@@ -58,7 +58,7 @@ class Release:
         self.info_json = ModInfoShort(json_data["info_json"])
 
     def __repr__(self) -> str:
-        return f"Release(download_url={self.download_url}, file_name={self.file_name}, info_json={self.info_json}, released_at={self.released_at}, version={self.version}, sha1={self.sha1})"
+        return f"Release(download_url='{self.download_url}', file_name='{self.file_name}', info_json='{self.info_json}', released_at='{self.released_at}', version='{self.version}', sha1='{self.sha1}')"
 
 
 class Tag:
@@ -72,7 +72,7 @@ class Tag:
         self.__dict__ = json_data
 
     def __repr__(self) -> str:
-        return f"Tag(id={self.id}, name={self.name}, title={self.title}, description={self.description}, type={self.type})"
+        return f"Tag(id='{self.id}', name='{self.name}', title='{self.title}', description='{self.description}', type='{self.type}')"
 
 
 class License:
@@ -86,7 +86,7 @@ class License:
         self.__dict__ = json_data
 
     def __repr__(self) -> str:
-        return f"License(description={self.description}, id={self.id}, name={self.name}, title={self.title}, url={self.url})"
+        return f"License(description='{self.description}', id='{self.id}', name='{self.name}', title='{self.title}', url='{self.url}')"
 
 
 class Result:
@@ -127,7 +127,7 @@ class Result:
             self.licence = [License(l) for l in license]
 
     def __repr__(self) -> str:
-        return f"Result(downloads_count={self.downloads_count}, latest_release={self.latest_release}, name={self.name}, owner={self.owner}, releases={self.releases}, summary={self.summary}, title={self.title}, category={self.category}, thumbnail={self.thumbnail}, changelog={self.changelog}, created_at={self.created_at}, description={self.description}, source_url={self.source_url}, github_path={self.github_path}, homepage={self.homepage}, tag={self.tag}, licence={self.licence})"
+        return f"Result(downloads_count='{self.downloads_count}', latest_release='{self.latest_release}', name='{self.name}', owner='{self.owner}', releases='{self.releases}', summary='{self.summary}', title='{self.title}', category='{self.category}', thumbnail='{self.thumbnail}', changelog='{self.changelog}', created_at='{self.created_at}', description='{self.description}', source_url='{self.source_url}', github_path='{self.github_path}', homepage='{self.homepage}', tag='{self.tag}', licence='{self.licence}')"
 
 
 class ModListResponse:
@@ -140,7 +140,7 @@ class ModListResponse:
         self.results = [Result(result) for result in json_data["results"]]
 
     def __repr__(self) -> str:
-        return f"ModListResponse(pagination={self.pagination}, results={self.results})"
+        return f"ModListResponse(pagination='{self.pagination}', results='{self.results}')"
 
 
 ################################################################################
@@ -157,7 +157,7 @@ class Category:
         self.desciption = json_data[2]
 
     def __repr__(self) -> str:
-        return f"Category(title={self.title}, name={self.name}, desciption={self.desciption})"
+        return f"Category(title='{self.title}', name='{self.name}', desciption='{self.desciption}')"
 
 
 ################################################################################
@@ -172,4 +172,4 @@ class BookmarkToggleStatus:
         self.__dict__ = json_data
 
     def __repr__(self) -> str:
-        return f"BookmarkToggleStatus(mod={self.mod}, state={self.state}, success={self.success})"
+        return f"BookmarkToggleStatus(mod='{self.mod}', state='{self.state}', success='{self.success}')"

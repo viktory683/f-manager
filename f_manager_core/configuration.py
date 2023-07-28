@@ -67,9 +67,7 @@ class FactorioConfigSection(ConfigSection):
             exe_file = list(list(path.joinpath("bin").iterdir())[0].iterdir())[0]
             executable = shutil.which(exe_file)
             if not executable:
-                raise GameNotFoundError(
-                    f"Could not find game executable file {exe_file}"
-                )
+                raise GameNotFoundError(f"Could not find game executable file {exe_file}")
         except FileNotFoundError as e:
             raise GameNotFoundError("Could not find game executable file") from e
         return path

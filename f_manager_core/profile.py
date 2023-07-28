@@ -1,11 +1,11 @@
 # import json
 # import pathlib
-import shutil
-from typing import Iterable
+# import shutil
+# from typing import Iterable
 
 # from f_manager_core import config, exceptions
-from f_manager_core.logger import logger
-from f_manager_core.mod import Mod
+# from f_manager_core.logger import logger
+# from f_manager_core.mod import LocalMod
 
 # from f_manager_core.mod import ModController
 
@@ -18,22 +18,22 @@ class ModPack:
 
     """
 
-    def __init__(self, name: str):
-        """Creates Profile object
+    # def __init__(self, name: str):
+    #     """Creates Profile object
 
-        Args:
-            name (str, optional): name of the profile
-            save_dir (pathlib.Path, optional): dir where to save the profile
+    #     Args:
+    #         name (str, optional): name of the profile
+    #         save_dir (pathlib.Path, optional): dir where to save the profile
 
-        """
+    #     """
 
-        if not isinstance(name, str):
-            raise TypeError("'name' should be of type 'str'")
+    #     if not isinstance(name, str):
+    #         raise TypeError("'name' should be of type 'str'")
 
-        self.name = name
-        self._new_name = None
-        self._mods: list[Mod] = []
-        self._filename = None
+    #     self.name = name
+    #     self._new_name = None
+    #     self._mods: list[LocalMod] = []
+    #     self._filename = None
 
         # self.save_dir = save_dir or config.profiles_dir
         # if isinstance(self.save_dir, str):
@@ -123,27 +123,27 @@ class ModPack:
     #         f"[{self.name}] updated with mods: [{' '.join(map(lambda mod: mod.name, mods))}]"
     #     )
 
-    def rename(self, new_name):
-        """Rename current profile
+    # def rename(self, new_name):
+    #     """Rename current profile
 
-        Note:
-            New name will be applied after save()
+    #     Note:
+    #         New name will be applied after save()
 
-        Args:
-            new_name (str): new name of the profile
+    #     Args:
+    #         new_name (str): new name of the profile
 
-        Returns:
-            None
+    #     Returns:
+    #         None
 
-        """
+    #     """
 
-        if not isinstance(new_name, str):
-            new_name = str(new_name)
+    #     if not isinstance(new_name, str):
+    #         new_name = str(new_name)
 
-        self._new_name = new_name
+    #     self._new_name = new_name
 
-        logger.info(f"[{self.name}] renamed to: {self._new_name}")
-        logger.warning("New name will be changed on save")
+    #     logger.info(f"[{self.name}] renamed to: {self._new_name}")
+    #     logger.warning("New name will be changed on save")
 
     # @property
     # def exists(self):
